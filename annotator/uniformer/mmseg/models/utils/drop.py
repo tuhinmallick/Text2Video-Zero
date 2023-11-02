@@ -27,5 +27,4 @@ class DropPath(nn.Module):
         random_tensor = self.keep_prob + torch.rand(
             shape, dtype=x.dtype, device=x.device)
         random_tensor.floor_()  # binarize
-        output = x.div(self.keep_prob) * random_tensor
-        return output
+        return x.div(self.keep_prob) * random_tensor

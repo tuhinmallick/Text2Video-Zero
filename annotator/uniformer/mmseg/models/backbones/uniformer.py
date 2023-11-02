@@ -145,8 +145,11 @@ def window_partition(x, window_size):
     """
     B, H, W, C = x.shape
     x = x.view(B, H // window_size, window_size, W // window_size, window_size, C)
-    windows = x.permute(0, 1, 3, 2, 4, 5).contiguous().view(-1, window_size, window_size, C)
-    return windows
+    return (
+        x.permute(0, 1, 3, 2, 4, 5)
+        .contiguous()
+        .view(-1, window_size, window_size, C)
+    )
 
 
 def window_reverse(windows, window_size, H, W):
@@ -381,7 +384,6 @@ class UniFormer(nn.Module):
         self.head = nn.Linear(self.embed_dim, num_classes) if num_classes > 0 else nn.Identity()
 
     def forward_features(self, x):
-        out = []
         x = self.patch_embed1(x)
         x = self.pos_drop(x)
         for i, blk in enumerate(self.blocks1):
@@ -390,7 +392,7 @@ class UniFormer(nn.Module):
             else:
                 x = blk(x)
         x_out = self.norm1(x.permute(0, 2, 3, 1))
-        out.append(x_out.permute(0, 3, 1, 2).contiguous())
+        out = [x_out.permute(0, 3, 1, 2).contiguous()]
         x = self.patch_embed2(x)
         for i, blk in enumerate(self.blocks2):
             if self.use_checkpoint and i < self.checkpoint_num[1]:

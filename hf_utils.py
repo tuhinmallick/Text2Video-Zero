@@ -3,22 +3,20 @@ import requests
 
 
 def model_url_list():
-    url_list = []
-    for i in range(0, 5):
-        url_list.append(
-            f"https://huggingface.co/models?p={i}&sort=downloads&search=dreambooth")
-    return url_list
+    return [
+        f"https://huggingface.co/models?p={i}&sort=downloads&search=dreambooth"
+        for i in range(0, 5)
+    ]
 
 
 def data_scraping(url_list):
     model_list = []
+    div_class = 'grid grid-cols-1 gap-5 2xl:grid-cols-2'
     for url in url_list:
         response = requests.get(url)
         soup = BeautifulSoup(response.text, "html.parser")
-        div_class = 'grid grid-cols-1 gap-5 2xl:grid-cols-2'
         div = soup.find('div', {'class': div_class})
-        for a in div.find_all('a', href=True):
-            model_list.append(a['href'])
+        model_list.extend(a['href'] for a in div.find_all('a', href=True))
     return model_list
 
 

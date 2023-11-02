@@ -62,7 +62,6 @@ class ResLayer(nn.Sequential):
             ])
             downsample = nn.Sequential(*downsample)
 
-        layers = []
         if multi_grid is None:
             if dilation > 1 and contract_dilation:
                 first_dilation = dilation // 2
@@ -70,7 +69,7 @@ class ResLayer(nn.Sequential):
                 first_dilation = dilation
         else:
             first_dilation = multi_grid[0]
-        layers.append(
+        layers = [
             block(
                 inplanes=inplanes,
                 planes=planes,
@@ -79,16 +78,20 @@ class ResLayer(nn.Sequential):
                 downsample=downsample,
                 conv_cfg=conv_cfg,
                 norm_cfg=norm_cfg,
-                **kwargs))
+                **kwargs
+            )
+        ]
         inplanes = planes * block.expansion
-        for i in range(1, num_blocks):
-            layers.append(
-                block(
-                    inplanes=inplanes,
-                    planes=planes,
-                    stride=1,
-                    dilation=dilation if multi_grid is None else multi_grid[i],
-                    conv_cfg=conv_cfg,
-                    norm_cfg=norm_cfg,
-                    **kwargs))
+        layers.extend(
+            block(
+                inplanes=inplanes,
+                planes=planes,
+                stride=1,
+                dilation=dilation if multi_grid is None else multi_grid[i],
+                conv_cfg=conv_cfg,
+                norm_cfg=norm_cfg,
+                **kwargs
+            )
+            for i in range(1, num_blocks)
+        )
         super(ResLayer, self).__init__(*layers)

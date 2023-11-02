@@ -27,8 +27,7 @@ class DisentangledNonLocal2d(NonLocal2d):
             # theta_x.shape[-1] is `self.inter_channels`
             pairwise_weight /= theta_x.shape[-1]**0.5
         pairwise_weight /= self.temperature
-        pairwise_weight = pairwise_weight.softmax(dim=-1)
-        return pairwise_weight
+        return pairwise_weight.softmax(dim=-1)
 
     def forward(self, x):
         # x: [N, C, H, W]
@@ -78,9 +77,7 @@ class DisentangledNonLocal2d(NonLocal2d):
         unary_x = unary_x.permute(0, 2, 1).contiguous().reshape(
             n, self.inter_channels, 1, 1)
 
-        output = x + self.conv_out(y + unary_x)
-
-        return output
+        return x + self.conv_out(y + unary_x)
 
 
 @HEADS.register_module()

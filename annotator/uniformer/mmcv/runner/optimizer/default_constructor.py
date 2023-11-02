@@ -192,7 +192,7 @@ class DefaultOptimizerConstructor:
             if not is_custom:
                 # bias_lr_mult affects all bias parameters
                 # except for norm.bias dcn.conv_offset.bias
-                if name == 'bias' and not (is_norm or is_dcn_module):
+                if name == 'bias' and not is_norm and not is_dcn_module:
                     param_group['lr'] = self.base_lr * bias_lr_mult
 
                 if (prefix.find('conv_offset') != -1 and is_dcn_module

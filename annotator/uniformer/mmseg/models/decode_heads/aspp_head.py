@@ -42,11 +42,7 @@ class ASPPModule(nn.ModuleList):
 
     def forward(self, x):
         """Forward function."""
-        aspp_outs = []
-        for aspp_module in self:
-            aspp_outs.append(aspp_module(x))
-
-        return aspp_outs
+        return [aspp_module(x) for aspp_module in self]
 
 
 @HEADS.register_module()

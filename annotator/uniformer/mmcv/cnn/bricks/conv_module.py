@@ -96,7 +96,7 @@ class ConvModule(nn.Module):
         self.with_explicit_padding = padding_mode not in official_padding_mode
         self.order = order
         assert isinstance(self.order, tuple) and len(self.order) == 3
-        assert set(order) == set(['conv', 'norm', 'act'])
+        assert set(order) == {'conv', 'norm', 'act'}
 
         self.with_norm = norm_cfg is not None
         self.with_activation = act_cfg is not None
@@ -167,10 +167,7 @@ class ConvModule(nn.Module):
 
     @property
     def norm(self):
-        if self.norm_name:
-            return getattr(self, self.norm_name)
-        else:
-            return None
+        return getattr(self, self.norm_name) if self.norm_name else None
 
     def init_weights(self):
         # 1. It is mainly for customized conv layers with their own

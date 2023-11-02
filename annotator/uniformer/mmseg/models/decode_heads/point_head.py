@@ -77,7 +77,7 @@ class PointHead(BaseCascadeDecodeHead):
         fc_in_channels = sum(self.in_channels) + self.num_classes
         fc_channels = self.channels
         self.fcs = nn.ModuleList()
-        for k in range(num_fcs):
+        for _ in range(num_fcs):
             fc = ConvModule(
                 fc_in_channels,
                 fc_channels,
@@ -90,7 +90,7 @@ class PointHead(BaseCascadeDecodeHead):
             self.fcs.append(fc)
             fc_in_channels = fc_channels
             fc_in_channels += self.num_classes if self.coarse_pred_each_layer \
-                else 0
+                    else 0
         self.fc_seg = nn.Conv1d(
             fc_in_channels,
             self.num_classes,
@@ -109,8 +109,7 @@ class PointHead(BaseCascadeDecodeHead):
         """Classify each pixel with fc."""
         if self.dropout is not None:
             feat = self.dropout(feat)
-        output = self.fc_seg(feat)
-        return output
+        return self.fc_seg(feat)
 
     def forward(self, fine_grained_point_feats, coarse_point_feats):
         x = torch.cat([fine_grained_point_feats, coarse_point_feats], dim=1)
@@ -137,12 +136,11 @@ class PointHead(BaseCascadeDecodeHead):
             point_sample(_, points, align_corners=self.align_corners)
             for _ in x
         ]
-        if len(fine_grained_feats_list) > 1:
-            fine_grained_feats = torch.cat(fine_grained_feats_list, dim=1)
-        else:
-            fine_grained_feats = fine_grained_feats_list[0]
-
-        return fine_grained_feats
+        return (
+            torch.cat(fine_grained_feats_list, dim=1)
+            if len(fine_grained_feats_list) > 1
+            else fine_grained_feats_list[0]
+        )
 
     def _get_coarse_point_feats(self, prev_output, points):
         """Sample from fine grained features.
@@ -157,10 +155,7 @@ class PointHead(BaseCascadeDecodeHead):
                 num_classes, num_points).
         """
 
-        coarse_feats = point_sample(
-            prev_output, points, align_corners=self.align_corners)
-
-        return coarse_feats
+        return point_sample(prev_output, points, align_corners=self.align_corners)
 
     def forward_train(self, inputs, prev_output, img_metas, gt_semantic_seg,
                       train_cfg):

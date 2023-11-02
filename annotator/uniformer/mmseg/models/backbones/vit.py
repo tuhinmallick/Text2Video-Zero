@@ -282,7 +282,7 @@ class VisionTransformer(nn.Module):
 
         if isinstance(out_indices, int):
             self.out_indices = [out_indices]
-        elif isinstance(out_indices, list) or isinstance(out_indices, tuple):
+        elif isinstance(out_indices, (list, tuple)):
             self.out_indices = out_indices
         else:
             raise TypeError('out_indices must be type of int, list or tuple')
@@ -372,17 +372,18 @@ class VisionTransformer(nn.Module):
             torch.Tensor: The pos encoded image feature.
         """
         assert patched_img.ndim == 3 and pos_embed.ndim == 3, \
-            'the shapes of patched_img and pos_embed must be [B, L, C]'
+                'the shapes of patched_img and pos_embed must be [B, L, C]'
         x_len, pos_len = patched_img.shape[1], pos_embed.shape[1]
         if x_len != pos_len:
-            if pos_len == (self.img_size[0] // self.patch_size) * (
-                    self.img_size[1] // self.patch_size) + 1:
-                pos_h = self.img_size[0] // self.patch_size
-                pos_w = self.img_size[1] // self.patch_size
-            else:
-                raise ValueError(
-                    'Unexpected shape of pos_embed, got {}.'.format(
-                        pos_embed.shape))
+            if (
+                pos_len
+                != (self.img_size[0] // self.patch_size)
+                * (self.img_size[1] // self.patch_size)
+                + 1
+            ):
+                raise ValueError(f'Unexpected shape of pos_embed, got {pos_embed.shape}.')
+            pos_h = self.img_size[0] // self.patch_size
+            pos_w = self.img_size[1] // self.patch_size
             pos_embed = self.resize_pos_embed(pos_embed, img.shape[2:],
                                               (pos_h, pos_w), self.patch_size,
                                               self.interpolate_mode)
@@ -438,11 +439,7 @@ class VisionTransformer(nn.Module):
                 if self.final_norm:
                     x = self.norm(x)
             if i in self.out_indices:
-                if self.with_cls_token:
-                    # Remove class token and reshape token for decoder head
-                    out = x[:, 1:]
-                else:
-                    out = x
+                out = x[:, 1:] if self.with_cls_token else x
                 B, _, C = out.shape
                 out = out.reshape(B, inputs.shape[2] // self.patch_size,
                                   inputs.shape[3] // self.patch_size,
