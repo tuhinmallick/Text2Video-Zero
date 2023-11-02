@@ -15,13 +15,11 @@ examples = [
 
 
 def load_db_model(evt: gr.SelectData):
-    db_name = gradio_utils.get_db_name_from_id(evt.index)
-    return db_name
+    return gradio_utils.get_db_name_from_id(evt.index)
 
 
 def canny_select(evt: gr.SelectData):
-    canny_name = gradio_utils.get_canny_name_from_id(evt.index)
-    return canny_name
+    return gradio_utils.get_canny_name_from_id(evt.index)
 
 
 def create_demo(model: Model):

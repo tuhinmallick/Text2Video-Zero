@@ -109,23 +109,21 @@ class SelfAttentionBlock(nn.Module):
                     norm_cfg=norm_cfg,
                     act_cfg=act_cfg)
             ]
-            for _ in range(num_convs - 1):
-                convs.append(
-                    ConvModule(
-                        channels,
-                        channels,
-                        1,
-                        conv_cfg=conv_cfg,
-                        norm_cfg=norm_cfg,
-                        act_cfg=act_cfg))
+            convs.extend(
+                ConvModule(
+                    channels,
+                    channels,
+                    1,
+                    conv_cfg=conv_cfg,
+                    norm_cfg=norm_cfg,
+                    act_cfg=act_cfg,
+                )
+                for _ in range(num_convs - 1)
+            )
         else:
             convs = [nn.Conv2d(in_channels, channels, 1)]
-            for _ in range(num_convs - 1):
-                convs.append(nn.Conv2d(channels, channels, 1))
-        if len(convs) > 1:
-            convs = nn.Sequential(*convs)
-        else:
-            convs = convs[0]
+            convs.extend(nn.Conv2d(channels, channels, 1) for _ in range(num_convs - 1))
+        convs = nn.Sequential(*convs) if len(convs) > 1 else convs[0]
         return convs
 
     def forward(self, query_feats, key_feats):

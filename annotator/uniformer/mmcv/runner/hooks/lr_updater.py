@@ -69,18 +69,17 @@ class LrUpdaterHook(Hook):
         raise NotImplementedError
 
     def get_regular_lr(self, runner):
-        if isinstance(runner.optimizer, dict):
-            lr_groups = {}
-            for k in runner.optimizer.keys():
-                _lr_group = [
-                    self.get_lr(runner, _base_lr)
-                    for _base_lr in self.base_lr[k]
-                ]
-                lr_groups.update({k: _lr_group})
-
-            return lr_groups
-        else:
+        if not isinstance(runner.optimizer, dict):
             return [self.get_lr(runner, _base_lr) for _base_lr in self.base_lr]
+        lr_groups = {}
+        for k in runner.optimizer.keys():
+            _lr_group = [
+                self.get_lr(runner, _base_lr)
+                for _base_lr in self.base_lr[k]
+            ]
+            lr_groups[k] = _lr_group
+
+        return lr_groups
 
     def get_warmup_lr(self, cur_iters):
 
@@ -115,7 +114,7 @@ class LrUpdaterHook(Hook):
                 _base_lr = [
                     group['initial_lr'] for group in optim.param_groups
                 ]
-                self.base_lr.update({k: _base_lr})
+                self.base_lr[k] = _base_lr
         else:
             for group in runner.optimizer.param_groups:
                 group.setdefault('initial_lr', group['lr'])
@@ -143,14 +142,13 @@ class LrUpdaterHook(Hook):
             else:
                 warmup_lr = self.get_warmup_lr(cur_iter)
                 self._set_lr(runner, warmup_lr)
-        elif self.by_epoch:
-            if self.warmup is None or cur_iter > self.warmup_iters:
-                return
-            elif cur_iter == self.warmup_iters:
-                self._set_lr(runner, self.regular_lr)
-            else:
-                warmup_lr = self.get_warmup_lr(cur_iter)
-                self._set_lr(runner, warmup_lr)
+        elif self.warmup is None or cur_iter > self.warmup_iters:
+            return
+        elif cur_iter == self.warmup_iters:
+            self._set_lr(runner, self.regular_lr)
+        else:
+            warmup_lr = self.get_warmup_lr(cur_iter)
+            self._set_lr(runner, warmup_lr)
 
 
 @HOOKS.register_module()
@@ -180,7 +178,7 @@ class StepLrUpdaterHook(LrUpdaterHook):
     def __init__(self, step, gamma=0.1, min_lr=None, **kwargs):
         if isinstance(step, list):
             assert mmcv.is_list_of(step, int)
-            assert all([s > 0 for s in step])
+            assert all(s > 0 for s in step)
         elif isinstance(step, int):
             assert step > 0
         else:
@@ -197,12 +195,10 @@ class StepLrUpdaterHook(LrUpdaterHook):
         if isinstance(self.step, int):
             exp = progress // self.step
         else:
-            exp = len(self.step)
-            for i, s in enumerate(self.step):
-                if progress < s:
-                    exp = i
-                    break
-
+            exp = next(
+                (i for i, s in enumerate(self.step) if progress < s),
+                len(self.step),
+            )
         lr = base_lr * (self.gamma**exp)
         if self.min_lr is not None:
             # clip to a minimum value
@@ -362,15 +358,11 @@ class CosineRestartLrUpdaterHook(LrUpdaterHook):
         super(CosineRestartLrUpdaterHook, self).__init__(**kwargs)
 
         self.cumulative_periods = [
-            sum(self.periods[0:i + 1]) for i in range(0, len(self.periods))
+            sum(self.periods[: i + 1]) for i in range(0, len(self.periods))
         ]
 
     def get_lr(self, runner, base_lr):
-        if self.by_epoch:
-            progress = runner.epoch
-        else:
-            progress = runner.iter
-
+        progress = runner.epoch if self.by_epoch else runner.iter
         if self.min_lr_ratio is not None:
             target_lr = base_lr * self.min_lr_ratio
         else:

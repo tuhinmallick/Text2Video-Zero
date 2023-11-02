@@ -185,11 +185,7 @@ class CityscapesDataset(CustomDataset):
 
         result_files, tmp_dir = self.format_results(results, imgfile_prefix)
 
-        if tmp_dir is None:
-            result_dir = imgfile_prefix
-        else:
-            result_dir = tmp_dir.name
-
+        result_dir = imgfile_prefix if tmp_dir is None else tmp_dir.name
         eval_results = dict()
         print_log(f'Evaluating results under {result_dir} ...', logger=logger)
 

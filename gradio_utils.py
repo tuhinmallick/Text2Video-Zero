@@ -28,6 +28,9 @@ def edge_path_to_video_path(edge_path):
 
 # App Pose utils
 def motion_to_video_path(motion):
+    if len(motion.split(" ")) <= 1 or not motion.split(" ")[1].isnumeric():
+        return motion
+    id = int(motion.split(" ")[1]) - 1
     videos = [
         "__assets__/poses_skeleton_gifs/dance1_corr.mp4",
         "__assets__/poses_skeleton_gifs/dance2_corr.mp4",
@@ -35,11 +38,7 @@ def motion_to_video_path(motion):
         "__assets__/poses_skeleton_gifs/dance4_corr.mp4",
         "__assets__/poses_skeleton_gifs/dance5_corr.mp4"
     ]
-    if len(motion.split(" ")) > 1 and motion.split(" ")[1].isnumeric():
-        id = int(motion.split(" ")[1]) - 1
-        return videos[id]
-    else:
-        return motion
+    return videos[id]
 
 
 # App Canny Dreambooth utils
@@ -64,17 +63,15 @@ def get_video_from_canny_selection(canny_selection):
 
 def get_model_from_db_selection(db_selection):
     if db_selection == "Anime DB":
-        input_video_path = 'PAIR/text2video-zero-controlnet-canny-anime'
-    elif db_selection == "Avatar DB":
-        input_video_path = 'PAIR/text2video-zero-controlnet-canny-avatar'
-    elif db_selection == "GTA-5 DB":
-        input_video_path = 'PAIR/text2video-zero-controlnet-canny-gta5'
+        return 'PAIR/text2video-zero-controlnet-canny-anime'
     elif db_selection == "Arcane DB":
-        input_video_path = 'PAIR/text2video-zero-controlnet-canny-arcane'
+        return 'PAIR/text2video-zero-controlnet-canny-arcane'
+    elif db_selection == "Avatar DB":
+        return 'PAIR/text2video-zero-controlnet-canny-avatar'
+    elif db_selection == "GTA-5 DB":
+        return 'PAIR/text2video-zero-controlnet-canny-gta5'
     else:
-        input_video_path = db_selection
-
-    return input_video_path
+        return db_selection
 
 
 def get_db_name_from_id(id):
@@ -93,6 +90,4 @@ def logo_name_to_path(name):
         'Text2Video-Zero': '__assets__/t2v-z_watermark.png',
         'None': None
     }
-    if name in logo_paths:
-        return logo_paths[name]
-    return name
+    return logo_paths.get(name, name)

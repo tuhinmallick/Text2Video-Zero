@@ -67,9 +67,7 @@ class Model:
 
         prompt = np.array(kwargs.pop('prompt'))
         negative_prompt = np.array(kwargs.pop('negative_prompt', ''))
-        latents = None
-        if 'latents' in kwargs:
-            latents = kwargs.pop('latents')[frame_ids]
+        latents = kwargs.pop('latents')[frame_ids] if 'latents' in kwargs else None
         if 'image' in kwargs:
             kwargs['image'] = kwargs['image'][frame_ids]
         if 'video_length' in kwargs:
@@ -96,21 +94,17 @@ class Model:
             seed = self.generator.seed()
         kwargs.pop('generator', '')
 
-        if 'image' in kwargs:
-            f = kwargs['image'].shape[0]
-        else:
-            f = kwargs['video_length']
-
+        f = kwargs['image'].shape[0] if 'image' in kwargs else kwargs['video_length']
         assert 'prompt' in kwargs
         prompt = [kwargs.pop('prompt')] * f
         negative_prompt = [kwargs.pop('negative_prompt', '')] * f
-
-        frames_counter = 0
 
         # Processing chunk-by-chunk
         if split_to_chunks:
             chunk_ids = np.arange(0, f, chunk_size - 1)
             result = []
+            frames_counter = 0
+
             for i in range(len(chunk_ids)):
                 ch_start = chunk_ids[i]
                 ch_end = f if i == len(chunk_ids) - 1 else chunk_ids[i + 1]
@@ -124,8 +118,7 @@ class Model:
                 frames_counter += len(chunk_ids)-1
                 if on_huggingspace and frames_counter >= 80:
                     break
-            result = np.concatenate(result)
-            return result
+            return np.concatenate(result)
         else:
             self.generator.manual_seed(seed)
             return self.pipe(prompt=prompt, negative_prompt=negative_prompt, generator=self.generator, **kwargs).images
@@ -177,22 +170,23 @@ class Model:
         latents = torch.randn((1, 4, h//8, w//8), dtype=self.dtype,
                               device=self.device, generator=self.generator)
         latents = latents.repeat(f, 1, 1, 1)
-        result = self.inference(image=control,
-                                prompt=prompt + ', ' + added_prompt,
-                                height=h,
-                                width=w,
-                                negative_prompt=negative_prompts,
-                                num_inference_steps=num_inference_steps,
-                                guidance_scale=guidance_scale,
-                                controlnet_conditioning_scale=controlnet_conditioning_scale,
-                                eta=eta,
-                                latents=latents,
-                                seed=seed,
-                                output_type='numpy',
-                                split_to_chunks=True,
-                                chunk_size=chunk_size,
-                                merging_ratio=merging_ratio,
-                                )
+        result = self.inference(
+            image=control,
+            prompt=f'{prompt}, {added_prompt}',
+            height=h,
+            width=w,
+            negative_prompt=negative_prompts,
+            num_inference_steps=num_inference_steps,
+            guidance_scale=guidance_scale,
+            controlnet_conditioning_scale=controlnet_conditioning_scale,
+            eta=eta,
+            latents=latents,
+            seed=seed,
+            output_type='numpy',
+            split_to_chunks=True,
+            chunk_size=chunk_size,
+            merging_ratio=merging_ratio,
+        )
         return utils.create_video(result, fps, path=save_path, watermark=gradio_utils.logo_name_to_path(watermark))
 
     def process_controlnet_depth(self,
@@ -240,22 +234,23 @@ class Model:
         latents = torch.randn((1, 4, h//8, w//8), dtype=self.dtype,
                               device=self.device, generator=self.generator)
         latents = latents.repeat(f, 1, 1, 1)
-        result = self.inference(image=control,
-                                prompt=prompt + ', ' + added_prompt,
-                                height=h,
-                                width=w,
-                                negative_prompt=negative_prompts,
-                                num_inference_steps=num_inference_steps,
-                                guidance_scale=guidance_scale,
-                                controlnet_conditioning_scale=controlnet_conditioning_scale,
-                                eta=eta,
-                                latents=latents,
-                                seed=seed,
-                                output_type='numpy',
-                                split_to_chunks=True,
-                                chunk_size=chunk_size,
-                                merging_ratio=merging_ratio,
-                                )
+        result = self.inference(
+            image=control,
+            prompt=f'{prompt}, {added_prompt}',
+            height=h,
+            width=w,
+            negative_prompt=negative_prompts,
+            num_inference_steps=num_inference_steps,
+            guidance_scale=guidance_scale,
+            controlnet_conditioning_scale=controlnet_conditioning_scale,
+            eta=eta,
+            latents=latents,
+            seed=seed,
+            output_type='numpy',
+            split_to_chunks=True,
+            chunk_size=chunk_size,
+            merging_ratio=merging_ratio,
+        )
         return utils.create_video(result, fps, path=save_path, watermark=gradio_utils.logo_name_to_path(watermark))
 
     def process_controlnet_pose(self,
@@ -302,22 +297,23 @@ class Model:
         latents = torch.randn((1, 4, h//8, w//8), dtype=self.dtype,
                               device=self.device, generator=self.generator)
         latents = latents.repeat(f, 1, 1, 1)
-        result = self.inference(image=control,
-                                prompt=prompt + ', ' + added_prompt,
-                                height=h,
-                                width=w,
-                                negative_prompt=negative_prompts,
-                                num_inference_steps=num_inference_steps,
-                                guidance_scale=guidance_scale,
-                                controlnet_conditioning_scale=controlnet_conditioning_scale,
-                                eta=eta,
-                                latents=latents,
-                                seed=seed,
-                                output_type='numpy',
-                                split_to_chunks=True,
-                                chunk_size=chunk_size,
-                                merging_ratio=merging_ratio,
-                                )
+        result = self.inference(
+            image=control,
+            prompt=f'{prompt}, {added_prompt}',
+            height=h,
+            width=w,
+            negative_prompt=negative_prompts,
+            num_inference_steps=num_inference_steps,
+            guidance_scale=guidance_scale,
+            controlnet_conditioning_scale=controlnet_conditioning_scale,
+            eta=eta,
+            latents=latents,
+            seed=seed,
+            output_type='numpy',
+            split_to_chunks=True,
+            chunk_size=chunk_size,
+            merging_ratio=merging_ratio,
+        )
         return utils.create_gif(result, fps, path=save_path, watermark=gradio_utils.logo_name_to_path(watermark))
 
     def process_controlnet_canny_db(self,
@@ -368,22 +364,23 @@ class Model:
         latents = torch.randn((1, 4, h//8, w//8), dtype=self.dtype,
                               device=self.device, generator=self.generator)
         latents = latents.repeat(f, 1, 1, 1)
-        result = self.inference(image=control,
-                                prompt=prompt + ', ' + added_prompt,
-                                height=h,
-                                width=w,
-                                negative_prompt=negative_prompts,
-                                num_inference_steps=num_inference_steps,
-                                guidance_scale=guidance_scale,
-                                controlnet_conditioning_scale=controlnet_conditioning_scale,
-                                eta=eta,
-                                latents=latents,
-                                seed=seed,
-                                output_type='numpy',
-                                split_to_chunks=True,
-                                chunk_size=chunk_size,
-                                merging_ratio=merging_ratio,
-                                )
+        result = self.inference(
+            image=control,
+            prompt=f'{prompt}, {added_prompt}',
+            height=h,
+            width=w,
+            negative_prompt=negative_prompts,
+            num_inference_steps=num_inference_steps,
+            guidance_scale=guidance_scale,
+            controlnet_conditioning_scale=controlnet_conditioning_scale,
+            eta=eta,
+            latents=latents,
+            seed=seed,
+            output_type='numpy',
+            split_to_chunks=True,
+            chunk_size=chunk_size,
+            merging_ratio=merging_ratio,
+        )
         return utils.create_gif(result, fps, path=save_path, watermark=gradio_utils.logo_name_to_path(watermark))
 
     def process_pix2pix(self,
@@ -462,15 +459,11 @@ class Model:
         negative_prompts = 'longbody, lowres, bad anatomy, bad hands, missing fingers, extra digit, fewer difits, cropped, worst quality, low quality, deformed body, bloated, ugly, unrealistic'
 
         prompt = prompt.rstrip()
-        if len(prompt) > 0 and (prompt[-1] == "," or prompt[-1] == "."):
+        if len(prompt) > 0 and prompt[-1] in [",", "."]:
             prompt = prompt.rstrip()[:-1]
         prompt = prompt.rstrip()
-        prompt = prompt + ", "+added_prompt
-        if len(n_prompt) > 0:
-            negative_prompt = n_prompt
-        else:
-            negative_prompt = None
-
+        prompt = f"{prompt}, {added_prompt}"
+        negative_prompt = n_prompt if len(n_prompt) > 0 else None
         result = self.inference(prompt=prompt,
                                 video_length=video_length,
                                 height=resolution,

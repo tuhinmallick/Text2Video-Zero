@@ -150,10 +150,7 @@ class EncHead(BaseDecodeHead):
 
     def forward_test(self, inputs, img_metas, test_cfg):
         """Forward function for testing, ignore se_loss."""
-        if self.use_se_loss:
-            return self.forward(inputs)[0]
-        else:
-            return self.forward(inputs)
+        return self.forward(inputs)[0] if self.use_se_loss else self.forward(inputs)
 
     @staticmethod
     def _convert_to_onehot_labels(seg_label, num_classes):

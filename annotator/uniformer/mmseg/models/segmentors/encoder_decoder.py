@@ -107,8 +107,7 @@ class EncoderDecoder(BaseSegmentor):
     def _decode_head_forward_test(self, x, img_metas):
         """Run forward function and calculate loss for decode head in
         inference."""
-        seg_logits = self.decode_head.forward_test(x, img_metas, self.test_cfg)
-        return seg_logits
+        return self.decode_head.forward_test(x, img_metas, self.test_cfg)
 
     def _auxiliary_head_forward_train(self, x, img_metas, gt_semantic_seg):
         """Run forward function and calculate loss for auxiliary head in
@@ -129,9 +128,7 @@ class EncoderDecoder(BaseSegmentor):
 
     def forward_dummy(self, img):
         """Dummy forward function."""
-        seg_logit = self.encode_decode(img, None)
-
-        return seg_logit
+        return self.encode_decode(img, None)
 
     def forward_train(self, img, img_metas, gt_semantic_seg):
         """Forward function for training.

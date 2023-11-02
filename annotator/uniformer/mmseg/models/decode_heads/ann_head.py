@@ -25,8 +25,7 @@ class PPMConcat(nn.ModuleList):
         for ppm in self:
             ppm_out = ppm(feats)
             ppm_outs.append(ppm_out.view(*feats.shape[:2], -1))
-        concat_outs = torch.cat(ppm_outs, dim=2)
-        return concat_outs
+        return torch.cat(ppm_outs, dim=2)
 
 
 class SelfAttentionBlock(_SelfAttentionBlock):
@@ -126,8 +125,7 @@ class AFNB(nn.Module):
         """Forward function."""
         priors = [stage(high_feats, low_feats) for stage in self.stages]
         context = torch.stack(priors, dim=0).sum(dim=0)
-        output = self.bottleneck(torch.cat([context, high_feats], 1))
-        return output
+        return self.bottleneck(torch.cat([context, high_feats], 1))
 
 
 class APNB(nn.Module):
@@ -176,8 +174,7 @@ class APNB(nn.Module):
         """Forward function."""
         priors = [stage(feats, feats) for stage in self.stages]
         context = torch.stack(priors, dim=0).sum(dim=0)
-        output = self.bottleneck(torch.cat([context, feats], 1))
-        return output
+        return self.bottleneck(torch.cat([context, feats], 1))
 
 
 @HEADS.register_module()

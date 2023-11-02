@@ -152,12 +152,9 @@ class BaseSegmentor(nn.Module):
         losses = self(**data_batch)
         loss, log_vars = self._parse_losses(losses)
 
-        outputs = dict(
-            loss=loss,
-            log_vars=log_vars,
-            num_samples=len(data_batch['img_metas']))
-
-        return outputs
+        return dict(
+            loss=loss, log_vars=log_vars, num_samples=len(data_batch['img_metas'])
+        )
 
     def val_step(self, data_batch, **kwargs):
         """The iteration step during validation.
@@ -166,8 +163,7 @@ class BaseSegmentor(nn.Module):
         during val epochs. Note that the evaluation after training epochs is
         not implemented with this method, but an evaluation hook.
         """
-        output = self(**data_batch, **kwargs)
-        return output
+        return self(**data_batch, **kwargs)
 
     @staticmethod
     def _parse_losses(losses):

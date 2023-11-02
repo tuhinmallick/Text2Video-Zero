@@ -52,14 +52,11 @@ class TextToVideoPipeline(StableDiffusionPipeline):
 
         if x0 is None:
             return torch.randn(shape, generator=generator, device=rand_device, dtype=text_embeddings.dtype).to(device)
-        else:
-            eps = torch.randn(x0.shape, dtype=text_embeddings.dtype, generator=generator,
-                              device=rand_device)
-            alpha_vec = torch.prod(self.scheduler.alphas[t0:tMax])
+        eps = torch.randn(x0.shape, dtype=text_embeddings.dtype, generator=generator,
+                          device=rand_device)
+        alpha_vec = torch.prod(self.scheduler.alphas[t0:tMax])
 
-            xt = torch.sqrt(alpha_vec) * x0 + \
-                torch.sqrt(1-alpha_vec) * eps
-            return xt
+        return torch.sqrt(alpha_vec) * x0 + torch.sqrt(1 - alpha_vec) * eps
 
     def prepare_latents(self, batch_size, num_channels_latents, video_length, height, width, dtype, device, generator, latents=None):
         shape = (batch_size, num_channels_latents, video_length, height //
@@ -130,11 +127,10 @@ class TextToVideoPipeline(StableDiffusionPipeline):
             for i, t in enumerate(timesteps):
                 if t > skip_t:
                     continue
-                else:
-                    if not entered:
-                        print(
-                            f"Continue DDIM with i = {i}, t = {t}, latent = {latents.shape}, device = {latents.device}, type = {latents.dtype}")
-                        entered = True
+                if not entered:
+                    print(
+                        f"Continue DDIM with i = {i}, t = {t}, latent = {latents.shape}, device = {latents.device}, type = {latents.dtype}")
+                    entered = True
 
                 latents = latents.detach()
                 # expand the latents if we are doing classifier free guidance
@@ -157,7 +153,7 @@ class TextToVideoPipeline(StableDiffusionPipeline):
                     noise_pred_uncond, noise_pred_text = noise_pred.chunk(
                         2)
                     noise_pred = noise_pred_uncond + guidance_scale * \
-                        (noise_pred_text - noise_pred_uncond)
+                            (noise_pred_text - noise_pred_uncond)
 
                 if i >= guidance_stop_step * len(timesteps):
                     alpha = 0
@@ -167,12 +163,13 @@ class TextToVideoPipeline(StableDiffusionPipeline):
                 # latents = latents - alpha * grads / (torch.norm(grads) + 1e-10)
                 # call the callback, if provided
 
-                if i < len(timesteps)-1 and timesteps[i+1] == t0:
-                    x_t0_1 = latents.detach().clone()
-                    print(f"latent t0 found at i = {i}, t = {t}")
-                elif i < len(timesteps)-1 and timesteps[i+1] == t1:
-                    x_t1_1 = latents.detach().clone()
-                    print(f"latent t1 found at i={i}, t = {t}")
+                if i < len(timesteps)-1:
+                    if timesteps[i + 1] == t0:
+                        x_t0_1 = latents.detach().clone()
+                        print(f"latent t0 found at i = {i}, t = {t}")
+                    elif timesteps[i + 1] == t1:
+                        x_t1_1 = latents.detach().clone()
+                        print(f"latent t1 found at i={i}, t = {t}")
 
                 if i == len(timesteps) - 1 or ((i + 1) > num_warmup_steps and (i + 1) % self.scheduler.order == 0):
                     progress_bar.update()

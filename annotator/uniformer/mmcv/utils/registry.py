@@ -96,10 +96,7 @@ class Registry:
         # 2. parent.build_func
         # 3. build_from_cfg
         if build_func is None:
-            if parent is not None:
-                self.build_func = parent.build_func
-            else:
-                self.build_func = build_from_cfg
+            self.build_func = parent.build_func if parent is not None else build_from_cfg
         else:
             self.build_func = build_func
         if parent is not None:
@@ -116,10 +113,7 @@ class Registry:
         return self.get(key) is not None
 
     def __repr__(self):
-        format_str = self.__class__.__name__ + \
-                     f'(name={self._name}, ' \
-                     f'items={self._module_dict})'
-        return format_str
+        return f'{self.__class__.__name__}(name={self._name}, items={self._module_dict})'
 
     @staticmethod
     def infer_scope():
@@ -198,15 +192,13 @@ class Registry:
             if real_key in self._module_dict:
                 return self._module_dict[real_key]
         else:
-            # get from self._children
             if scope in self._children:
                 return self._children[scope].get(real_key)
-            else:
-                # goto root
-                parent = self.parent
-                while parent.parent is not None:
-                    parent = parent.parent
-                return parent.get(key)
+            # goto root
+            parent = self.parent
+            while parent.parent is not None:
+                parent = parent.parent
+            return parent.get(key)
 
     def build(self, *args, **kwargs):
         return self.build_func(*args, **kwargs, registry=self)
